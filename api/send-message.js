@@ -1,9 +1,7 @@
-// Arquivo: /api/send-message.js
-
-// Importa a biblioteca do Pusher
+// Importa a biblioteca do Pusher, necessária para o backend
 const Pusher = require('pusher');
 
-// Configuração do Pusher com suas chaves
+// Configuração do Pusher com as suas chaves
 const pusher = new Pusher({
   appId: "2011213",
   key: "5da5ccfefec60617c0cd",
@@ -12,24 +10,28 @@ const pusher = new Pusher({
   useTLS: true
 });
 
-// Função principal que a Vercel irá executar
+// Esta é a função principal que a Vercel irá executar sempre que a sua URL for chamada.
 export default async function handler(request, response) {
-  // Configurações para permitir que seu app React chame esta função
+  // Estas linhas são importantes para permitir que o seu aplicativo React (o frontend)
+  // possa comunicar com este backend de forma segura.
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Responde ao "pre-flight request" do navegador
+  // O navegador envia um pedido 'OPTIONS' antes do pedido 'POST' real.
+  // Esta parte do código simplesmente responde que está tudo bem.
   if (request.method === 'OPTIONS') {
     return response.status(200).end();
   }
 
-  // Pega a mensagem do corpo da requisição
+  // Pega nos dados da mensagem (o texto, nome do remetente, etc.)
+  // que o frontend enviou.
   const message = request.body;
 
-  // Dispara o evento "new-message" no canal "habitat-channel" com os dados da mensagem
+  // Usa o Pusher para enviar a mensagem para todas as outras pessoas
+  // que estiverem com o chat aberto.
   await pusher.trigger("habitat-channel", "new-message", message);
 
-  // Responde que tudo deu certo
+  // Responde ao seu aplicativo que a mensagem foi enviada com sucesso.
   response.status(200).json({ status: 'Mensagem enviada com sucesso' });
 }
